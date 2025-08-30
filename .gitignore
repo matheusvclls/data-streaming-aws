@@ -1,0 +1,4 @@
+resources/.terraform*
+resources/terraform*
+venv
+README.md
