@@ -96,8 +96,8 @@ resource "aws_kinesis_firehose_delivery_stream" "this" {
     compression_format = "GZIP"
 
     # Partition by event time using Firehose timestamp macros
-    prefix              = "orders/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
-    error_output_prefix = "errors/orders/!{firehose:error-output-type}/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
+    prefix              = "orders/event_date=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
+    error_output_prefix = "errors/orders/!{firehose:error-output-type}/event_date=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
 
     cloudwatch_logging_options {
       enabled         = true
