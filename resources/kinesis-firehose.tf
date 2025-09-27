@@ -1,5 +1,5 @@
 variable "project"           { default = "lakehouse" }
-variable "firehose_name"     { default = "firehose-events-users-visit-pages" }
+variable "firehose_name"     { default = "firehose-orders" }
 variable "buffer_size_mb"    { default = 1 }   # 1–128
 variable "buffer_interval_s" { default = 60 }  # 60–900
 
@@ -96,8 +96,8 @@ resource "aws_kinesis_firehose_delivery_stream" "this" {
     compression_format = "GZIP"
 
     # Partition by event time using Firehose timestamp macros
-    prefix              = "events-users-visit-pages/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
-    error_output_prefix = "errors/events-users-visit-pages/!{firehose:error-output-type}/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
+    prefix              = "orders/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
+    error_output_prefix = "errors/orders/!{firehose:error-output-type}/date_event=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
 
     cloudwatch_logging_options {
       enabled         = true
