@@ -27,7 +27,7 @@ NUM_PRODUCTS = 500  # variedade de produtos simulados
 # Estado em memória para permitir updates consistentes
 _state = {
     "next_order_id": 1,
-    "orders": {}  # order_id -> {"user_id", "product_id", "amount", "payment_method"}
+    "orders": {}  # order_id -> {"user_id", "product_id", "amount", "payment_method", "event_timestamp"}
 }
 
 def _mk_order(p_update: float = 0.30) -> dict:
@@ -37,6 +37,7 @@ def _mk_order(p_update: float = 0.30) -> dict:
     - 'u' (update): escolhe uma ordem existente e ajusta alguns campos (ex.: amount).
     Retorna somente as colunas solicitadas.
     """
+    now = dt.datetime.utcnow()
     has_orders = bool(_state["orders"])
     do_update = has_orders and (random.random() < p_update)
 
@@ -71,18 +72,19 @@ def _mk_order(p_update: float = 0.30) -> dict:
             "user_id": user_id,
             "product_id": product_id,
             "amount": amount,
-            "payment_method": payment_method
+            "payment_method": payment_method,
+            "event_timestamp": now.isoformat()
         }
 
     # Apenas as colunas solicitadas
-    now = dt.datetime.utcnow()
     return {
         "order_id": order_id,
         "user_id": user_id,
         "product_id": product_id,
         "database_operation": op,
         "amount": amount,
-        "payment_method": payment_method
+        "payment_method": payment_method,
+        "event_timestamp": now.isoformat()
     }
 
 def test_locally(total: int = TOTAL, batch_size: int = BATCH_SIZE, p_update: float = P_UPDATE):
@@ -108,6 +110,6 @@ def put_batch_orders(total: int = TOTAL, batch_size: int = BATCH_SIZE, p_update:
         fh.put_record_batch(DeliveryStreamName=DELIVERY_STREAM_NAME, Records=buf)
 
 if __name__ == "__main__":
-    #put_batch_orders()
-    test_locally()
+    put_batch_orders(total=1000000)
+    #test_locally()
     print("done")

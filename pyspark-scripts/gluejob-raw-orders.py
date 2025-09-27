@@ -64,9 +64,9 @@ spark.sql("""
     database_operation  STRING,          -- 'i' (insert) | 'u' (update)
     amount              DECIMAL(12,2),
     payment_method      STRING,          -- 'debit_card' | 'boleto' | 'pix' | 'credit_card' | 'paypal' ...
-    etl_timestamp       TIMESTAMP,       -- preenchida no job
-    event_date          DATE,            -- preenchida no job
-    date_event          DATE,            -- preenchida no job
+    event_date          DATE,
+    event_timestamp       TIMESTAMP,       
+    etl_timestamp       TIMESTAMP,       -- preenchida no job            
     source_filename     STRING           -- preenchida no job
   )
   USING iceberg
@@ -104,9 +104,10 @@ df = (
          .otherwise(F.lit("i"))
     )
     .withColumn("etl_timestamp", F.current_timestamp())
+    # processa event_timestamp dos dados de entrada
+    .withColumn("event_timestamp", F.to_timestamp(F.col("event_timestamp")))
     # garante que date_event exista e seja DATE
-    .withColumn("date_event", F.to_date(F.col("date_event")))
-    .withColumn("event_date", F.to_date(F.col("date_event")))
+    .withColumn("event_date", F.to_date(F.col("event_date")))
     .withColumn("source_filename", F.input_file_name().cast("string"))
     # reordena exatamente como no schema da tabela
     .select(
@@ -116,9 +117,9 @@ df = (
         "database_operation",
         "amount",
         "payment_method",
-        "etl_timestamp",
         "event_date",
-        "date_event",
+        "event_timestamp",
+        "etl_timestamp",
         "source_filename",
     )
 )
