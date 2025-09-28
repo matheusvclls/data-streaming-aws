@@ -11,7 +11,7 @@ source_database = "raw"
 source_table = "orders"
 target_database = "processed"
 target_table = "orders"
-warehouse_path = "s3://raw-zone-622813843927/iceberg/"
+warehouse_path = "s3://processed-zone-622813843927/iceberg/"
 checkpoint_path = "s3://processed-zone-622813843927/checkpoints/orders/"
 
 def qid(name: str) -> str:
