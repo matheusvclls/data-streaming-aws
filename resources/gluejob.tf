@@ -187,6 +187,51 @@ resource "aws_cloudwatch_log_group" "glue_job_processed" {
 }
 
 ############################################
+# Glue Job for Initial Load (Processed Orders)
+############################################
+resource "aws_glue_job" "processed_orders_initial_load" {
+  name              = "gluejob-processed-orders-initial-load"
+  role_arn          = aws_iam_role.glue_job.arn
+  glue_version      = "5.0"
+  worker_type       = "G.1X"
+  number_of_workers = 2
+  timeout           = 60
+  max_retries       = 0
+
+  command {
+    script_location = "s3://${aws_s3_bucket.resources.bucket}/pyspark-scripts/gluejob-processed-orders-initial-load.py"
+    python_version  = "3"
+  }
+
+  default_arguments = {
+    "--job-language"                    = "python"
+    "--job-bookmark-option"             = "job-bookmark-disable"
+    "--enable-metrics"                  = "true"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-spark-ui"                 = "true"
+    "--spark-event-logs-path"           = "s3://${aws_s3_bucket.queryresults.bucket}/spark-logs/"
+    "--TempDir"                         = "s3://${aws_s3_bucket.queryresults.bucket}/temp/"
+    "--enable-glue-datacatalog"         = "true"
+    "--additional-python-modules"       = "pyiceberg==0.6.0"
+  }
+
+  tags = {
+    Project = var.project
+  }
+}
+
+############################################
+# CloudWatch Log Group for Initial Load Glue Job
+############################################
+resource "aws_cloudwatch_log_group" "glue_job_processed_initial_load" {
+  name              = "/aws-glue/jobs/gluejob-processed-orders-initial-load"
+  retention_in_days = 14
+  tags = {
+    Project = var.project
+  }
+}
+
+############################################
 # S3 bucket for Glue scripts
 ############################################
 resource "aws_s3_bucket_object" "glue_script" {
@@ -201,4 +246,11 @@ resource "aws_s3_bucket_object" "glue_script_processed" {
   key    = "pyspark-scripts/gluejob-processed-orders.py"
   source = "../pyspark-scripts/gluejob-processed-orders.py"
   etag   = filemd5("../pyspark-scripts/gluejob-processed-orders.py")
+}
+
+resource "aws_s3_bucket_object" "glue_script_processed_initial_load" {
+  bucket = aws_s3_bucket.resources.bucket
+  key    = "pyspark-scripts/gluejob-processed-orders-initial-load.py"
+  source = "../pyspark-scripts/gluejob-processed-orders-initial-load.py"
+  etag   = filemd5("../pyspark-scripts/gluejob-processed-orders-initial-load.py")
 }
