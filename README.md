@@ -50,24 +50,25 @@ terraform apply
 This will create:
 - 5 S3 buckets (landing-zone, raw-zone, processed-zone, queryresults, resources)
 - Kinesis Firehose delivery stream
-- 2 AWS Glue jobs for data processing
+- 3 AWS Glue jobs for data processing
 - IAM roles and policies
 - CloudWatch log groups
 
 ## Project Structure
 
 ```
-├── producer_orders.py              # Data generator script
+├── producer_orders.py                          # Data generator script
 ├── pyspark-scripts/
-│   ├── gluejob-raw-orders.py      # Raw data processing job
-│   └── gluejob-processed-orders.py # Processed data ETL job
-├── resources/                      # Terraform infrastructure
-│   ├── bucket.tf                  # S3 bucket definitions
-│   ├── kinesis-firehose.tf        # Firehose configuration
-│   ├── gluejob.tf                 # Glue job definitions
-│   └── provider.tf                # AWS provider configuration
-├── tests/                         # Test scripts
-└── requirements.txt               # Python dependencies
+│   ├── gluejob-raw-orders.py                  # Raw data processing job
+│   ├── gluejob-processed-orders.py            # Processed data ETL job
+│   └── gluejob-processed-orders-initial-load.py # Initial load job for processed data
+├── resources/                                  # Terraform infrastructure
+│   ├── bucket.tf                              # S3 bucket definitions
+│   ├── kinesis-firehose.tf                    # Firehose configuration
+│   ├── gluejob.tf                             # Glue job definitions
+│   └── provider.tf                            # AWS provider configuration
+├── tests/                                     # Test scripts
+└── requirements.txt                           # Python dependencies
 ```
 
 ## Usage
@@ -95,7 +96,8 @@ The script will:
 
 Execute the Glue jobs manually or set up triggers:
 - `gluejob-raw-orders`: Processes raw data from landing zone
-- `gluejob-processed-orders`: Performs additional transformations
+- `gluejob-processed-orders`: Performs incremental transformations on processed data
+- `gluejob-processed-orders-initial-load`: Performs initial bulk load from raw to processed zone with deduplication (run once to bootstrap the processed table)
 
 ## Configuration
 
