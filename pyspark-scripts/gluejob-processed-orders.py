@@ -77,47 +77,7 @@ df_stream = (
 )
 
 # ---------------------------
-# Função para verificar se a tabela está vazia
-# ---------------------------
-def is_table_empty(table_name):
-    """Verifica se a tabela está vazia"""
-    try:
-        count = spark.sql(f"SELECT COUNT(*) as cnt FROM {table_name}").collect()[0]["cnt"]
-        return count == 0
-    except Exception as e:
-        print(f"Error checking if table is empty: {e}")
-        return True  # Assume vazia se houver erro
-
-# ---------------------------
-# Função para inserir em tabela vazia
-# ---------------------------
-def insert_to_empty_table(microbatch, batch_id):
-    """Insere dados em uma tabela vazia com deduplicação"""
-    try:
-        print(f"Inserting into empty table for batch {batch_id}...")
-
-        # Deduplicação do micro-lote antes de inserir
-        ts_col = "event_timestamp"
-        key_col = "order_id"
-
-        if ts_col in microbatch.columns and key_col in microbatch.columns:
-            w = Window.partitionBy(F.col(key_col)).orderBy(F.col(ts_col).desc())
-            microbatch = microbatch.withColumn("row_rank", F.row_number().over(w)).filter("row_rank = 1").drop("row_rank")
-            print(f"Deduplication applied for batch {batch_id}")
-
-        microbatch.write \
-            .format("iceberg") \
-            .mode("append") \
-            .option("write.format.default", "parquet") \
-            .saveAsTable(f"glue_catalog.{target_database}.{target_table}")
-
-        print(f"INSERT completed successfully for batch {batch_id}")
-    except Exception as e:
-        print(f"Error in INSERT: {str(e)}")
-        raise e
-
-# ---------------------------
-# Função para MERGE em tabela com dados
+# Função para MERGE em tabela
 # ---------------------------
 def merge_to_existing_table(microbatch, batch_id):
     """Faz MERGE em uma tabela que já tem dados com deduplicação"""
@@ -184,19 +144,12 @@ def merge_to_existing_table(microbatch, batch_id):
 # ---------------------------
 def upsert_to_iceberg(microbatch, batch_id):
     """
-    Função para processar cada micro-lote e fazer upsert na tabela processed.orders
+    Função para processar cada micro-lote e fazer MERGE na tabela processed.orders
     """
     print(f"Processing batch {batch_id} with {microbatch.count()} records")
     
-    # Verifica se a tabela está vazia e escolhe a estratégia apropriada
-    table_name = f"glue_catalog.{target_database}.{target_table}"
-    
-    if is_table_empty(table_name):
-        print("Table is empty, using INSERT strategy...")
-        insert_to_empty_table(microbatch, batch_id)
-    else:
-        print("Table has data, using MERGE strategy...")
-        merge_to_existing_table(microbatch, batch_id)
+    # Sempre usa MERGE (a carga inicial deve ser feita pelo script de initial-load)
+    merge_to_existing_table(microbatch, batch_id)
     
     print(f"Batch {batch_id} processed successfully")
 
