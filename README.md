@@ -4,6 +4,8 @@ A comprehensive data streaming pipeline built on AWS using Kinesis Firehose, S3,
 
 ## Architecture Overview
 
+![Arquitetura do pipeline](images/arquitetura.png)
+
 This pipeline consists of:
 - **Data Producer**: Python script that generates synthetic e-commerce order data
 - **Kinesis Firehose**: Real-time data ingestion service
@@ -57,6 +59,8 @@ This will create:
 ## Project Structure
 
 ```
+├── images/
+│   └── arquitetura.png                        # Architecture diagram
 ├── producer_orders.py                          # Data generator script
 ├── pyspark-scripts/
 │   ├── gluejob-raw-orders.py                  # Raw data processing job
